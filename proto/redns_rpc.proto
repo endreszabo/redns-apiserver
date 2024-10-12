@@ -1,0 +1,126 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+
+//option go_package = "git.y7.hu/Y7/coredns_redns/api";
+option go_package = "github.com/endreszabo/redns-apiserver/redns_rpc";
+
+package y7_redns_apiserver_v1;
+
+message DetailedStrayEntity {
+    string QName = 1;
+    string QType = 2;
+    string Id = 3;
+    string Rfc1035 = 4;
+    uint32 Expiry = 5;
+    string RedisKey = 6;
+}
+
+message RRidentifier {
+    string QName = 1;
+    string QType = 2;
+}
+
+message StrayEntity2 {
+    oneof selector {
+        RRidentifier identifier = 1;
+        string Rfc1035 = 2;
+    }
+    string Id = 3;
+}
+
+message StrayEntity {
+    string QName = 1;
+    string QType = 2;
+    string Id = 3;
+}
+
+message StrayDeleteRequest {
+    string QName = 1;
+    string QType = 2;
+    string Id = 3;
+}
+
+enum Result {
+    success = 0;
+    not_found = 1;
+}
+
+message StrayDeleteResponse {
+    string server = 1;
+    uint32 rowsAffected = 2;
+}
+
+message PerServerStrayDeleteByIdResult {
+    StrayEntity request = 1;
+    repeated StrayDeleteResponse results = 2;
+}
+
+message StrayByValueRequest {
+    string Rfc1035 = 2;
+}
+
+message StrayDeleteResponses {
+    repeated StrayDeleteResponse results = 1;
+}
+
+message StrayModifyRequest {
+    string Id = 1;
+    string Rfc1035 = 2;
+    optional uint32 Expiry = 3;
+    bool AllowOverwrite = 4;
+}
+
+message StrayModifyRequests {
+    repeated StrayModifyRequest reqs = 1;
+}
+
+message StrayModifyResponse {
+    StrayModifyRequest request = 1;
+    string result = 2;
+}
+
+message StrayModifyResponses {
+    repeated StrayModifyResponse reqs = 1;
+}
+
+message ResultMsg {
+    optional string message = 1;
+}
+
+service Stray {
+    rpc AddStray(StrayModifyRequests) returns (google.protobuf.Empty);
+    rpc AddStrays(stream StrayModifyRequests) returns (google.protobuf.Empty);
+    rpc ListStrays(google.protobuf.Empty) returns (stream DetailedStrayEntity);
+    rpc DeleteStrayById(StrayEntity) returns (google.protobuf.Empty);
+    rpc DeleteStrayByValue(StrayByValueRequest) returns (StrayDeleteResponses);
+    rpc ModifyStray(StrayModifyRequest) returns (ResultMsg);
+}
+
+message AddGenerationRequest {
+    string id = 1;
+}
+message AddGenerationResponse {
+    uint32 affectedRecordsCount = 1;
+}
+
+message Rfc1035 {
+    string Rfc1035 = 1;
+}
+
+message DeleteGenerationRequest {
+    string id = 1;
+}
+
+message RednsGenerationDeleteResponse {
+    string server = 1;
+    uint32 affectedRecordsCount = 2;
+}
+
+message PerServerRednsGenerationDeleteByIdResult {
+    repeated RednsGenerationDeleteResponse results = 1;
+}
+
+service Redns {
+    rpc AddGeneration(stream Rfc1035) returns (AddGenerationResponse);
+    rpc DeleteGenerationById(DeleteGenerationRequest) returns (PerServerRednsGenerationDeleteByIdResult);
+}
